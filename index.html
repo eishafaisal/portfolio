@@ -13,7 +13,8 @@ html{background:var(--bg,var(--ink));color:var(--lamp)}
 body{font:400 15px/1.5 Figtree,system-ui,sans-serif;overflow-x:hidden}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 a{color:inherit}
-header{position:fixed;inset:0 0 auto;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:20px clamp(16px,4vw,40px)}
+/* a solid bar in the colour of the room, so the work never scrolls underneath the text */
+header{position:fixed;inset:0 0 auto;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px clamp(16px,4vw,40px);background:var(--bg,var(--ink));box-shadow:0 1px 0 rgba(168,149,122,.22)}
 .name{font:italic 1.4rem 'Instrument Serif',Georgia,serif}
 header div{display:flex;gap:24px}
 #lights{border-bottom:1px solid currentColor;padding-bottom:1px}
@@ -57,6 +58,8 @@ dialog::backdrop{background:rgba(10,6,8,.95)}
 dialog.full .stage{position:fixed;inset:0;z-index:5;background:#0a0608}
 dialog.full .stage img,dialog.full .stage video,dialog.full .stage .poster{width:min(100vw,calc(100svh*var(--ar)))!important}
 dialog.full .cap,dialog.full .bar,dialog.full .loupe{display:none}
+dialog.full .stage::after{content:"Tap to exit full screen";position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));text-align:center;font-size:13px;color:#a8957a;animation:fade 3s 2s forwards}
+@keyframes fade{to{opacity:0}}
 
 .beam,.flick,.bulb{position:absolute;pointer-events:none}
 .beam,.flick{inset:0}
@@ -72,7 +75,7 @@ dialog.full .cap,dialog.full .bar,dialog.full .loupe{display:none}
 @media(prefers-reduced-motion:reduce){.flick,.bulb{animation:none}}
 .studio{padding-top:30vh}
 .studio .ph{background:linear-gradient(165deg,#d8c5a0,#c2ab82)}
-html{scroll-snap-type:y proximity}
+html{scroll-snap-type:y proximity;scroll-padding-top:64px} /* rooms settle centred in the space below the bar */
 
 /* rooms: pieces sharing a room sit side by side at one height, sized so the row always fits the screen.
    --n (pieces) and --sum (their widths/heights added up) are set by the script */
@@ -123,8 +126,7 @@ body.studio-on .head{opacity:1;transform:none}
 /* phones and narrow screens */
 @media(max-width:700px){
   html{scroll-snap-type:none}
-  header{align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:var(--bg,var(--ink));box-shadow:0 1px 0 rgba(168,149,122,.22);transition:transform .35s ease}
-  header.up{transform:translateY(-100%)}
+  header{align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
   .name{font-size:1.3rem}
   header div{gap:20px}
   .lg{display:none}.sm{display:inline}
@@ -242,10 +244,6 @@ function onScroll(){
   pt=Math.min(1,Math.max(0,(innerHeight*.95-top)/(innerHeight*.7)));
   document.body.classList.toggle('studio-on',pt>.8);
   if(scrollY>innerHeight*.3)hint.classList.add('gone');
-  /* on phones the header bar slips away while you read down, and comes back as soon as you scroll up */
-  const dy=scrollY-lastY;
-  if(narrow.matches&&Math.abs(dy)>6){header.classList.toggle('up',dy>0&&scrollY>80);lastY=scrollY}
-  if(!narrow.matches)header.classList.remove('up');
 }
 addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);onScroll();
 const C={bg:[[20,13,16],[234,220,189]],lamp:[[243,223,181],[42,28,24]],dim:[[168,149,122],[109,91,73]]};
@@ -255,9 +253,10 @@ const mix=(k,p)=>'rgb('+C[k][0].map((a,i)=>Math.round(a+(C[k][1][i]-a)*p)).join(
 const hb=document.querySelector(".hero div").getBoundingClientRect();
 let tx=hb.left+Math.min(hb.width,innerWidth*.6)*.45,ty=hb.top+hb.height/2,x=tx,y=ty;
 hint.textContent=touch?'Drag to move the light.':'Move the light.';
-let rt=420,rr=420,idle,ps=pt,ls=0,last='';
+let rt=420,rr=420,idle,ps=pt,ls=0,last='',tilting=false;
 (function loop(){
-  x+=(tx-x)*(calm?1:.1);y+=(ty-y)*(calm?1:.1);rr+=(rt-rr)*(calm?1:.06);
+  const f=calm?1:tilting?.08:.1; /* a touch more glide when the phone is steering */
+  x+=(tx-x)*f;y+=(ty-y)*f;rr+=(rt-rr)*(calm?1:.06);
   ps+=(pt-ps)*(calm?1:.12);ls+=(lt-ls)*(calm?1:.06);
   const e=ps*ps*(3-2*ps); /* smoothstep */
   root.style.setProperty('--x',x+'px');root.style.setProperty('--y',y+'px');
@@ -283,19 +282,25 @@ function aim(el){const r=el.getBoundingClientRect();move(r.left+r.width/2,r.top+
 
 /* tilt: the phone becomes the torch. The angle you hold it at when you enter is "centre",
    and that centre slowly follows you so the light never gets stuck at an edge. */
-let tilting=false,base=null,gyro=false;
+let base=null,gyro=false,since=0,sb=null,sg=null;
 function tilt(e){ /* gyroscope angles: iPhones and most Android phones */
   if(e.beta==null||e.gamma==null||(e.beta===0&&e.gamma===0))return;gyro=true; /* all-zero readings mean no real sensor */aim2(e.beta,e.gamma)}
-function motion(e){ /* phones without a gyroscope: work the angles out from gravity instead */
-  const a=e.accelerationIncludingGravity;if(gyro||!a||a.x==null)return;
+function motion(e){ /* phones without a gyroscope: work the angles out from gravity instead.
+  Only used if the gyroscope has stayed silent for a second, so the two never fight. */
+  const a=e.accelerationIncludingGravity;if(gyro||performance.now()-since<1000||!a||a.x==null)return;
   const D=180/Math.PI;aim2(Math.atan2(a.y,a.z)*D,Math.atan2(-a.x,Math.hypot(a.y,a.z))*D)}
-function listen(){addEventListener('deviceorientation',tilt);addEventListener('devicemotion',motion)}
+function listen(){if(since)return;since=performance.now();addEventListener('deviceorientation',tilt);addEventListener('devicemotion',motion)}
 function aim2(b,g){
   const a=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
   if(a===90)[b,g]=[-g,b];else if(a===270||a===-90)[b,g]=[g,-b];
-  if(!base)base=[b,g];base[0]+=(b-base[0])*.004;base[1]+=(g-base[1])*.004;
-  const k=v=>Math.max(-1,Math.min(1,v/20));
-  tilting=true;tx=innerWidth/2+k(g-base[1])*innerWidth*.55;ty=innerHeight/2+k(b-base[0])*innerHeight*.5;rt=Math.min(innerWidth*.62,300);
+  g=Math.max(-60,Math.min(60,g));
+  /* smooth the raw readings so the small shakes of a hand don't reach the light */
+  if(sb==null){sb=b;sg=g}else{sb+=(b-sb)*.22;sg+=(g-sg)*.22}
+  /* centre = how you hold the phone; it follows you only very slowly, so a held tilt stays put */
+  if(!base)base=[sb,sg];base[0]+=(sb-base[0])*.0015;base[1]+=(sg-base[1])*.0015;
+  /* a gentle 25° tilt reaches the edge; a tiny dead zone keeps the light still while you hold steady */
+  const k=v=>{const s=Math.max(0,Math.abs(v)-1.2)/24;return Math.sign(v)*Math.min(1,s)};
+  tilting=true;tx=innerWidth/2+k(sg-base[1])*innerWidth*.55;ty=innerHeight/2+k(sb-base[0])*innerHeight*.5;rt=Math.min(innerWidth*.62,300);
 }
 let ready,started=new Promise(r=>ready=r);
 const intro=document.getElementById('intro');
@@ -308,6 +313,7 @@ if(touch){
     if(asks){try{await DeviceOrientationEvent.requestPermission()}catch(_){}
       try{if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function')await DeviceMotionEvent.requestPermission()}catch(_){}
       listen()} /* if motion is refused or missing, no events arrive and dragging still works */
+    base=null;sb=null; /* centre the light on however you're holding the phone right now */
     intro.classList.add('out');document.body.style.overflow='';setTimeout(()=>intro.hidden=true,900);ready();
     setTimeout(()=>{hint.textContent=tilting?'Tilt to move the light.':'Drag to move the light.';hint.classList.remove('gone')},1000);
   };
@@ -356,12 +362,14 @@ function lens(){const wrap=st.querySelector('.lens'),img=wrap&&wrap.querySelecto
 
 /* full screen: the real thing where the browser allows it, otherwise the piece fills the window */
 const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
-function full(){
+function full(e){
+  if(e)e.stopPropagation(); /* otherwise the same tap reaches "tap anywhere to exit" and undoes it */
   if(fsEl()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
   if(d.classList.contains('full')){d.classList.remove('full');label();return}
-  const req=st.requestFullscreen||st.webkitRequestFullscreen;
+  const req=st.requestFullscreen||st.webkitRequestFullscreen,v=st.querySelector('video');
   if(req)Promise.resolve(req.call(st)).catch(()=>{d.classList.add('full');label()});
-  else{d.classList.add('full');label()}
+  else if(v&&v.webkitEnterFullscreen)v.webkitEnterFullscreen(); /* iPhone: its own video player, full screen */
+  else{d.classList.add('full');label()} /* iPhone photos: the piece fills the whole screen on black */
 }
 const label=()=>{fb.textContent=fsEl()||d.classList.contains('full')?'Exit full screen':'Full screen'};
 ['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,label));
