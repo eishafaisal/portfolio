@@ -58,7 +58,15 @@ dialog::backdrop{background:rgba(10,6,8,.95)}
 dialog.full .stage{position:fixed;inset:0;z-index:5;background:#0a0608}
 dialog.full .stage img,dialog.full .stage video,dialog.full .stage .poster{width:min(100vw,calc(100svh*var(--ar)))!important}
 dialog.full .cap,dialog.full .bar,dialog.full .loupe{display:none}
-dialog.full .stage::after{content:"Tap to exit full screen";position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));text-align:center;font-size:13px;color:#a8957a;animation:fade 3s 2s forwards}
+/* zooming in full screen: the page stops scrolling so two fingers move the piece instead */
+.stage:fullscreen{position:relative;overflow:hidden;touch-action:none}
+.stage:-webkit-full-screen{position:relative;overflow:hidden;touch-action:none}
+dialog.full .stage{overflow:hidden;touch-action:none}
+.stage:fullscreen .beam,.stage:fullscreen .flick,.stage:fullscreen .bulb,dialog.full .beam,dialog.full .flick,dialog.full .bulb{display:none}
+.zoomed{cursor:grab}
+.stage:fullscreen::after{content:attr(data-tip);position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:13px;color:#a8957a;pointer-events:none;animation:fade 3s 2.5s forwards}
+.stage:-webkit-full-screen::after{content:attr(data-tip);position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:13px;color:#a8957a;pointer-events:none;animation:fade 3s 2.5s forwards}
+dialog.full .stage::after{content:attr(data-tip);position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));text-align:center;font-size:13px;color:#a8957a;pointer-events:none;animation:fade 3s 2.5s forwards}
 @keyframes fade{to{opacity:0}}
 
 .beam,.flick,.bulb{position:absolute;pointer-events:none}
@@ -344,6 +352,7 @@ lb.onclick=()=>{const on=document.body.classList.toggle('lit');lt=on?1:0;ls_.tex
 const d=document.getElementById('d'),st=d.querySelector('.stage'),fb=document.getElementById('full');let cur=0;
 function show(i,from){
   cur=(i+WORKS.length)%WORKS.length;const w=WORKS[cur],v=`aspect-ratio:${w.r||'3/4'};--ar:${ar(w)}`;
+  if(typeof Z!=='undefined'){Z.s=1;Z.x=Z.y=0}
   st.style.setProperty('--ar',ar(w));
   st.innerHTML=w.video
     ?`<div class="lens">${vid(w)}<button type="button" class="vt"></button></div>`
@@ -377,15 +386,57 @@ function full(e){
   else{d.classList.add('full');label()} /* iPhone photos: the piece fills the whole screen on black */
 }
 const label=()=>{fb.textContent=fsEl()||d.classList.contains('full')?'Exit full screen':'Full screen'};
-['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,label));
+['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,()=>{label();if(!fsEl())resetZ()}));
+st.dataset.tip=touch?'Pinch to zoom · tap to exit':'Scroll to zoom · click to exit';
+
+/* zoom in full screen: pinch with two fingers (or scroll a mouse wheel), drag to look around,
+   double-tap to zoom in or back out, single tap to leave full screen */
+const isFull=()=>!!fsEl()||d.classList.contains('full');
+const Z={s:1,x:0,y:0},pts=new Map();let g0=null,moved=false,tapT=0,exitT=null;
+const zt=()=>st.querySelector('.lens img,.lens video,.poster');
+function applyZ(){const el=zt();if(!el)return;el.style.transformOrigin='0 0';el.style.transform=Z.s>1.001?`translate(${Z.x}px,${Z.y}px) scale(${Z.s})`:'';st.classList.toggle('zoomed',Z.s>1.001)}
+function resetZ(){Z.s=1;Z.x=0;Z.y=0;applyZ()}
+function baseOf(){const r=zt().getBoundingClientRect();return {l:r.left-Z.x,t:r.top-Z.y,w:r.width/Z.s,h:r.height/Z.s}}
+function clampZ(b){ /* keep the piece covering the screen; never let it drift off */
+  const fit=(pos,size,start,view)=>size<=view?(view-size)/2-start:Math.min(-start,Math.max(view-start-size,pos));
+  Z.x=fit(Z.x,b.w*Z.s,b.l,innerWidth);Z.y=fit(Z.y,b.h*Z.s,b.t,innerHeight)}
+function zoomTo(s,ax,ay){ /* zoom around a point on screen, which stays under your fingers */
+  const b=baseOf(),px=(ax-b.l-Z.x)/Z.s,py=(ay-b.t-Z.y)/Z.s;
+  Z.s=Math.max(1,Math.min(5,s));Z.x=ax-b.l-Z.s*px;Z.y=ay-b.t-Z.s*py;clampZ(b);applyZ()}
+function startG(){
+  const p=[...pts.values()];if(!p.length||!zt()){g0=null;return}
+  const m=p.length>1?{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2,d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)}:{x:p[0].x,y:p[0].y,d:0};
+  const b=baseOf();g0={...m,s:Z.s,x0:Z.x,y0:Z.y,b,px:(m.x-b.l-Z.x)/Z.s,py:(m.y-b.t-Z.y)/Z.s}}
+function exitFull(){if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);d.classList.remove('full');label();resetZ()}
+st.addEventListener('pointerdown',e=>{
+  if(!isFull()||e.target.closest('.vt')||!zt())return;
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY,x1:e.clientX,y1:e.clientY});if(pts.size>1)moved=true;else moved=false;startG()});
+st.addEventListener('pointermove',e=>{
+  const p=pts.get(e.pointerId);if(!p||!g0)return;p.x=e.clientX;p.y=e.clientY;
+  if(Math.hypot(p.x-p.x1,p.y-p.y1)>8)moved=true;
+  const v=[...pts.values()];
+  if(v.length>1){ /* pinch: scale by how far apart the fingers are, and follow where they move */
+    const mx=(v[0].x+v[1].x)/2,my=(v[0].y+v[1].y)/2,dd=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);
+    Z.s=Math.max(1,Math.min(5,g0.s*dd/Math.max(1,g0.d)));Z.x=mx-g0.b.l-Z.s*g0.px;Z.y=my-g0.b.t-Z.s*g0.py;clampZ(g0.b);applyZ();
+  }else if(Z.s>1.001){Z.x=g0.x0+(p.x-g0.x);Z.y=g0.y0+(p.y-g0.y);clampZ(g0.b);applyZ()}});
+function endP(e){
+  if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
+  if(pts.size){startG();return}
+  if(Z.s<1.03)resetZ();
+  if(moved||e.type==='pointercancel')return;
+  const now=performance.now();
+  if(now-tapT<320){clearTimeout(exitT);tapT=0;Z.s>1.05?resetZ():zoomTo(2.5,e.clientX,e.clientY)} /* double-tap */
+  else{tapT=now;if(Z.s<=1.05)exitT=setTimeout(exitFull,320)}} /* single tap, once it's clear it isn't a double */
+st.addEventListener('pointerup',endP);st.addEventListener('pointercancel',endP);
+st.addEventListener('wheel',e=>{if(!isFull()||!zt())return;e.preventDefault();zoomTo(Z.s*Math.exp(-e.deltaY*.0015),e.clientX,e.clientY)},{passive:false});
 fb.onclick=full;
 document.getElementById('prev').onclick=()=>show(cur-1);
 document.getElementById('next').onclick=()=>show(cur+1);
 document.getElementById('close').onclick=()=>d.close();
 d.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1);if(e.key==='f')full()});
-d.addEventListener('close',()=>{st.innerHTML='';if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);d.classList.remove('full');label()});
+d.addEventListener('close',()=>{st.innerHTML='';if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);d.classList.remove('full');label();Z.s=1;Z.x=Z.y=0;pts.clear()});
 d.addEventListener('click',e=>{
-  if(d.classList.contains('full')&&!e.target.closest('.vt')){d.classList.remove('full');label();return}
+  if(isFull())return; /* in full screen, taps are handled by the zoom code above */
   if(!e.target.closest('.lens,.poster,iframe,.cap,.bar,.ph'))d.close()});
 /* swipe left / right between pieces on phones */
 let sx=null,sy=0;
