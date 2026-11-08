@@ -130,8 +130,9 @@ body.studio-on .head{opacity:1;transform:none}
   .lg{display:none}.sm{display:inline}
   #hint{left:16px;bottom:calc(16px + env(safe-area-inset-bottom))}
   .hero{padding:0 16px 16vh}
-  .head{padding:0 16px 4vh}
-  .room{flex-direction:column;align-items:stretch;gap:9vh;min-height:0;padding:9vh 16px}
+  .head{padding:0 16px 10vh}
+  /* space only below each row, so the gap between rows matches the gap between pieces in a row */
+  .room{flex-direction:column;align-items:stretch;gap:9vh;min-height:0;padding:0 16px 9vh}
   .room::after{display:none}
   .room .w{width:100%}
   .room .w img,.room .w video,.room .w .ph,.room .film .frame{width:100%;height:auto}
@@ -190,11 +191,11 @@ const PRACTICE = [
   {t:"You Are Your Own Adversary",m:"Cardboard, mirror, wood, fabric, foam sheet",s:"3.5 feet tall",d:"2024",img:"images/you-are-your-own-adversary.jpg",r:"1753/2576",room:4},
   {t:"Hidden Self",m:"Cloth, duct tape, wool, mannequin head, wig, gloves, shoes, lino prints, acrylic paint, chart paper",s:"5 feet tall",d:"2024",img:"images/hidden-self.jpg",r:"1595/2576",room:4},
   {t:"Defective Piece",m:"Lino print",s:"A3",d:"2024",img:"images/defective-piece.jpg",r:"2576/1978",room:5},
-  {t:"Mixed Media Animation",m:"Mixed media animation",s:"5 seconds, looped",d:"",video:"images/mixed-media-animation.mp4",img:"images/mixed-media-animation.jpg",r:"16/9",room:5}
+  {t:"Mixed Media Animation",m:"Mixed media animation",s:"5 seconds, looped",d:"2024",video:"images/mixed-media-animation.mp4",img:"images/mixed-media-animation.jpg",r:"16/9",room:5}
 ];
 /* ---------- */
 const WORKS=[...INSTALL,...PRACTICE];
-const calm=matchMedia('(prefers-reduced-motion:reduce)').matches, touch=matchMedia('(hover:none) and (pointer:coarse)').matches;
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches, touch=matchMedia('(pointer:coarse)').matches||((navigator.maxTouchPoints>0||'ontouchstart' in window)&&(matchMedia('(hover:none)').matches||Math.min(screen.width,screen.height)<=600)); /* many Android phones claim to hover, so screen size counts too */
 function ar(w){return w.r?(([a,b])=>a/b)(w.r.split('/')):(w.film?16/9:3/4)}
 const lines=w=>[w.m,w.s,w.d].filter(Boolean).join('<br>');
 const root=document.documentElement, hint=document.getElementById('hint');
@@ -281,10 +282,15 @@ function aim(el){const r=el.getBoundingClientRect();move(r.left+r.width/2,r.top+
 
 /* tilt: the phone becomes the torch. The angle you hold it at when you enter is "centre",
    and that centre slowly follows you so the light never gets stuck at an edge. */
-let tilting=false,base=null;
-function tilt(e){
-  if(e.beta==null||e.gamma==null)return;
-  let b=e.beta,g=e.gamma;const a=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+let tilting=false,base=null,gyro=false;
+function tilt(e){ /* gyroscope angles: iPhones and most Android phones */
+  if(e.beta==null||e.gamma==null||(e.beta===0&&e.gamma===0))return;gyro=true; /* all-zero readings mean no real sensor */aim2(e.beta,e.gamma)}
+function motion(e){ /* phones without a gyroscope: work the angles out from gravity instead */
+  const a=e.accelerationIncludingGravity;if(gyro||!a||a.x==null)return;
+  const D=180/Math.PI;aim2(Math.atan2(a.y,a.z)*D,Math.atan2(-a.x,Math.hypot(a.y,a.z))*D)}
+function listen(){addEventListener('deviceorientation',tilt);addEventListener('devicemotion',motion)}
+function aim2(b,g){
+  const a=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
   if(a===90)[b,g]=[-g,b];else if(a===270||a===-90)[b,g]=[g,-b];
   if(!base)base=[b,g];base[0]+=(b-base[0])*.004;base[1]+=(g-base[1])*.004;
   const k=v=>Math.max(-1,Math.min(1,v/20));
@@ -292,12 +298,15 @@ function tilt(e){
 }
 let ready,started=new Promise(r=>ready=r);
 const intro=document.getElementById('intro');
-if(touch&&'DeviceOrientationEvent' in window){
+if(touch){
   intro.hidden=false;document.body.style.overflow='hidden';
+  const asks=window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function';
+  if(!asks)listen(); /* Android needs no permission, so the light can follow straight away */
   document.getElementById('enter').onclick=async()=>{
-    /* iPhones (and some newer browsers) ask first; the tap on Enter is what lets them ask */
-    try{if(typeof DeviceOrientationEvent.requestPermission==='function')await DeviceOrientationEvent.requestPermission()}catch(_){}
-    addEventListener('deviceorientation',tilt); /* if motion is refused or missing, no events arrive and dragging still works */
+    /* iPhones ask first; the tap on Enter is what lets them ask */
+    if(asks){try{await DeviceOrientationEvent.requestPermission()}catch(_){}
+      try{if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function')await DeviceMotionEvent.requestPermission()}catch(_){}
+      listen()} /* if motion is refused or missing, no events arrive and dragging still works */
     intro.classList.add('out');document.body.style.overflow='';setTimeout(()=>intro.hidden=true,900);ready();
     setTimeout(()=>{hint.textContent=tilting?'Tilt to move the light.':'Drag to move the light.';hint.classList.remove('gone')},1000);
   };
