@@ -22,7 +22,7 @@ header div{display:flex;gap:24px}
 #hint{position:fixed;z-index:20;left:clamp(16px,4vw,40px);bottom:20px;color:var(--dim);transition:opacity 1.2s}
 #hint.gone{opacity:0}
 .night{position:fixed;inset:0;z-index:10;pointer-events:none;opacity:var(--night,1);
-background:radial-gradient(circle var(--r) at var(--x) var(--y),transparent 0,rgba(20,13,16,.4) 55%,rgba(20,13,16,.97) 100%)}
+background:radial-gradient(circle var(--r) at var(--x) var(--y),rgba(20,13,16,0) 0,rgba(20,13,16,.4) 55%,rgba(20,13,16,.97) 100%)} /* rgba(…,0), not "transparent": Safari fades it the same as Chrome */
 .hero{min-height:100svh;display:flex;align-items:flex-end;padding:0 clamp(16px,4vw,40px) 14vh}
 h1{font:400 clamp(2.8rem,10vw,9rem)/.92 'Instrument Serif',Georgia,serif;max-width:11ch;letter-spacing:-.01em}
 .w{display:block;width:100%;text-align:left}
@@ -229,7 +229,7 @@ function mount(list,el,off){const rooms={};list.forEach((w,i)=>{
   }else{
     b=hit=document.createElement('button');b.type='button';b.className='w'+(w.film?' film':'');b.innerHTML=inner;
   }
-  hit.onclick=()=>show(off+i,b.querySelector("img,video,.ph"));hit.onfocus=()=>{aim(b);rt=Math.max(b.offsetWidth,b.offsetHeight)*.8};r.append(b)});
+  hit.onclick=()=>show(off+i,b.querySelector("img,video,.ph"));hit.onfocus=()=>{if(tilting)return;aim(b);rt=Math.max(b.offsetWidth,b.offsetHeight)*.8};r.append(b)});
   Object.values(rooms).forEach(r=>{r.style.setProperty('--n',r.children.length);r.style.setProperty('--sum',r.sum.toFixed(4));el.append(r)})}
 mount(INSTALL,document.getElementById('a'),0);
 mount(PRACTICE,document.getElementById('b'),INSTALL.length);
@@ -253,7 +253,10 @@ const mix=(k,p)=>'rgb('+C[k][0].map((a,i)=>Math.round(a+(C[k][1][i]-a)*p)).join(
 const hb=document.querySelector(".hero div").getBoundingClientRect();
 let tx=hb.left+Math.min(hb.width,innerWidth*.6)*.45,ty=hb.top+hb.height/2,x=tx,y=ty;
 hint.textContent=touch?'Drag to move the light.':'Move the light.';
-let rt=420,rr=420,idle,ps=pt,ls=0,last='',tilting=false;
+/* the visible screen; iPhone Safari can report a wider page than what you actually see */
+const view=()=>{const v=window.visualViewport;return [v?v.width:innerWidth,v?v.height:innerHeight]};
+const phoneR=()=>{const [W,H]=view();return Math.min(W*.62,H*.5,300)}; /* one spotlight size for every phone */
+let rt=touch?phoneR():420,rr=rt,idle,ps=pt,ls=0,last='',tilting=false;
 (function loop(){
   const f=calm?1:tilting?.08:.1; /* a touch more glide when the phone is steering */
   x+=(tx-x)*f;y+=(ty-y)*f;rr+=(rt-rr)*(calm?1:.06);
@@ -269,7 +272,7 @@ let rt=420,rr=420,idle,ps=pt,ls=0,last='',tilting=false;
   requestAnimationFrame(loop);
 })();
 const arm=()=>{clearTimeout(idle);idle=setTimeout(cue,1400)};
-const move=(a,b)=>{tx=a;ty=b;rt=300;hint.classList.add('gone');arm()};
+const move=(a,b)=>{tx=a;ty=b;rt=touch?phoneR():300;hint.classList.add('gone');arm()};
 function cue(){ /* pause and the light finds the piece on screen */
   if(document.body.classList.contains('studio-on')||tilting)return;
   let best,bd=1e9;document.querySelectorAll('#a .room').forEach(r=>{const q=r.getBoundingClientRect(),d=Math.abs(q.top+q.height/2-innerHeight/2);if(d<bd){bd=d;best=q}});
@@ -300,7 +303,8 @@ function aim2(b,g){
   if(!base)base=[sb,sg];base[0]+=(sb-base[0])*.0015;base[1]+=(sg-base[1])*.0015;
   /* a gentle 25° tilt reaches the edge; a tiny dead zone keeps the light still while you hold steady */
   const k=v=>{const s=Math.max(0,Math.abs(v)-1.2)/24;return Math.sign(v)*Math.min(1,s)};
-  tilting=true;tx=innerWidth/2+k(sg-base[1])*innerWidth*.55;ty=innerHeight/2+k(sb-base[0])*innerHeight*.5;rt=Math.min(innerWidth*.62,300);
+  const [W,H]=view();
+  tilting=true;tx=W/2+k(sg-base[1])*W*.55;ty=H/2+k(sb-base[0])*H*.5;rt=phoneR();
 }
 let ready,started=new Promise(r=>ready=r);
 const intro=document.getElementById('intro');
@@ -331,8 +335,9 @@ lb.onclick=()=>{const on=document.body.classList.toggle('lit');lt=on?1:0;ls_.tex
   const typeTo=async(t,ms)=>{while(txt.length<t.length){txt=t.slice(0,txt.length+1);out.textContent=txt;await wait(ms)}};
   const eraseTo=async(n,ms)=>{while(txt.length>n){txt=txt.slice(0,-1);out.textContent=txt;await wait(ms)}};
   await started;await wait(1400);await typeTo(HEAD+'self-sab',55);
-  await wait(650);rt=170;await eraseTo(HEAD.length,38);
-  await wait(900);rt=420;await typeTo(FULL,55);out.parentNode.classList.add('done');
+  /* the light narrows on the stumble, then opens again (on phones it keeps the phone size) */
+  await wait(650);if(!tilting)rt=170;await eraseTo(HEAD.length,38);
+  await wait(900);if(!tilting)rt=touch?phoneR():420;await typeTo(FULL,55);out.parentNode.classList.add('done');
 })();
 
 /* detail view: the piece lifts out of the dark, flickers on like the installation lights, and the light becomes a lens */
