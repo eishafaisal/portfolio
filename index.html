@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Eisha Faisal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500&display=swap" rel="stylesheet">
@@ -17,37 +17,47 @@ header{position:fixed;inset:0 0 auto;z-index:20;display:flex;justify-content:spa
 .name{font:italic 1.4rem 'Instrument Serif',Georgia,serif}
 header div{display:flex;gap:24px}
 #lights{border-bottom:1px solid currentColor;padding-bottom:1px}
+.sm{display:none}
 #hint{position:fixed;z-index:20;left:clamp(16px,4vw,40px);bottom:20px;color:var(--dim);transition:opacity 1.2s}
 #hint.gone{opacity:0}
 .night{position:fixed;inset:0;z-index:10;pointer-events:none;opacity:var(--night,1);
 background:radial-gradient(circle var(--r) at var(--x) var(--y),transparent 0,rgba(20,13,16,.4) 55%,rgba(20,13,16,.97) 100%)}
 .hero{min-height:100svh;display:flex;align-items:flex-end;padding:0 clamp(16px,4vw,40px) 14vh}
 h1{font:400 clamp(2.8rem,10vw,9rem)/.92 'Instrument Serif',Georgia,serif;max-width:11ch;letter-spacing:-.01em}
-h1 em{opacity:1}
-.works{display:grid;grid-template-columns:repeat(12,1fr);gap:26vh 2vw;padding:10vh clamp(16px,4vw,40px) 24vh}
 .w{display:block;width:100%;text-align:left}
 .w img,.ph{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
 .ph{display:grid;place-items:center;color:var(--dim);background:linear-gradient(165deg,#4a3638,#1c1316 70%)}
-.film .ph{aspect-ratio:16/9}
 .w h2{font:italic 400 1.7rem/1.1 'Instrument Serif',Georgia,serif;margin:14px 0 4px}
 .w p,.cap p{color:var(--dim)}
-.w:hover img,.w:hover .ph{filter:brightness(1.18)}
+.w:hover img,.w:hover .ph,.w:hover video{filter:brightness(1.18)}
 .w:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--lamp);outline-offset:6px}
-footer{padding:0 clamp(16px,4vw,40px) 12vh;color:var(--dim)}
-dialog{margin:0;width:100vw;max-width:none;height:100svh;max-height:none;padding:0;border:0;background:transparent;color:var(--lamp);overflow:hidden}
+footer{display:flex;flex-wrap:wrap;gap:8px 24px;padding:0 clamp(16px,4vw,40px) 12vh;color:var(--dim)}
+
+/* detail view: keeps its own light-on-dark colours whatever the page behind is doing */
+dialog{--lamp:#f3dfb5;--dim:#a8957a;margin:0;width:100vw;max-width:none;height:100svh;max-height:none;padding:0;border:0;background:transparent;color:var(--lamp);overflow:hidden}
 dialog::backdrop{background:rgba(10,6,8,.95)}
 .in{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3vh 4vw;background:radial-gradient(circle at 50% 42%,rgba(243,223,181,.1),transparent 62%)}
-.stage{display:flex;justify-content:center}
+.stage{display:flex;justify-content:center;align-items:center}
 .lens{position:relative;line-height:0;touch-action:none}
 .lens:has(img){cursor:none}
-.stage img{display:block}
-.stage img,.stage .ph{height:auto;width:min(92vw,calc(70vh*var(--ar)))}
+.stage img,.stage video{display:block}
+.stage img,.stage video,.stage .ph{height:auto;width:min(92vw,calc(70vh*var(--ar)))}
 .stage iframe{border:0;display:block;width:min(92vw,calc(70vh*1.78));aspect-ratio:16/9}
 .loupe{position:absolute;width:180px;height:180px;border-radius:50%;pointer-events:none;opacity:0;background-repeat:no-repeat;box-shadow:0 0 0 1px rgba(243,223,181,.55),0 0 70px rgba(243,223,181,.4);transition:opacity .2s}
 .cap{text-align:center}
 .cap h2{font:italic 400 2rem/1.1 'Instrument Serif',Georgia,serif;margin:16px 0 4px}
-.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;width:min(520px,92vw);margin-top:18px}
-.bar #prev{justify-self:start}.bar #close{justify-self:center}.bar #next{justify-self:end}
+.bar{display:grid;grid-template-columns:1fr auto auto 1fr;align-items:center;gap:28px;width:min(560px,92vw);margin-top:18px}
+.bar #prev{justify-self:start}.bar #next{justify-self:end}
+/* full screen: the piece alone on black */
+.stage:fullscreen{background:#0a0608;width:100vw;height:100vh}
+.stage:fullscreen img,.stage:fullscreen video,.stage:fullscreen .poster{width:min(100vw,calc(100vh*var(--ar)))!important}
+.stage:fullscreen .loupe{display:none}
+.stage:-webkit-full-screen{background:#0a0608;width:100vw;height:100vh}
+.stage:-webkit-full-screen img,.stage:-webkit-full-screen video,.stage:-webkit-full-screen .poster{width:min(100vw,calc(100vh*var(--ar)))!important}
+dialog.full .stage{position:fixed;inset:0;z-index:5;background:#0a0608}
+dialog.full .stage img,dialog.full .stage video,dialog.full .stage .poster{width:min(100vw,calc(100svh*var(--ar)))!important}
+dialog.full .cap,dialog.full .bar,dialog.full .loupe{display:none}
+
 .beam,.flick,.bulb{position:absolute;pointer-events:none}
 .beam,.flick{inset:0}
 .beam{background:radial-gradient(ellipse 90% 100% at 50% 0,transparent 0,rgba(10,6,8,.1) 35%,rgba(10,6,8,.5) 100%)}
@@ -61,26 +71,30 @@ dialog::backdrop{background:rgba(10,6,8,.95)}
 @keyframes bi{0%,86%,100%{opacity:1}88%{opacity:.5}90%{opacity:1}93%{opacity:.35}95%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.flick,.bulb{animation:none}}
 .studio{padding-top:30vh}
-.studio .works{gap:12vh 3vw;padding-top:6vh}
 .studio .ph{background:linear-gradient(165deg,#d8c5a0,#c2ab82)}
 html{scroll-snap-type:y proximity}
-.room{--ph:min(calc(100svh - 18vh - 11rem),56vw);min-height:100svh;display:flex;justify-content:center;align-items:flex-start;gap:3vw;padding:11vh 4vw 7vh;position:relative;scroll-snap-align:center}
+
+/* rooms: pieces sharing a room sit side by side at one height, sized so the row always fits the screen.
+   --n (pieces) and --sum (their widths/heights added up) are set by the script */
+.room{--ph:min(calc(100svh - 18vh - 11rem),calc((90vw - (var(--n,1) - 1)*3vw)/var(--sum,.75)));min-height:100svh;display:flex;justify-content:center;align-items:flex-start;gap:3vw;padding:11vh 4vw 7vh;position:relative;scroll-snap-align:center}
 .room::after{content:"";position:absolute;left:0;right:0;top:calc(11vh + var(--ph));height:1px;background:var(--lamp);opacity:.22}
-.room .w{flex:none;width:auto;display:flex;flex-direction:column;align-items:flex-start}
-.room .w img,.room .w .ph{width:auto;height:var(--ph)}
+.room .w{flex:none;width:auto;display:flex;flex-direction:column;align-items:flex-start;position:relative}
+.room .w img,.room .w video,.room .w .ph{width:auto;height:var(--ph)}
 .room .w img{object-fit:contain}
-.room.n3{--ph:min(calc(100svh - 18vh - 11rem),37vw)}
-.room:has(.film){--ph:min(57vw,calc(100svh - 18vh - 11rem))}
+.w video{display:block;object-fit:cover}
+.open{display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%}
 .room .film .frame{display:block;position:relative;line-height:0;width:calc(var(--ph)*var(--ar,1.7778))}
 .room .film .frame img{width:100%;height:auto}
-.room .film .ph{height:auto;width:calc(var(--ph)*1.7778)}
 .play{position:absolute;left:50%;top:50%;width:clamp(64px,9vw,104px);aspect-ratio:1;margin:calc(clamp(64px,9vw,104px)/-2) 0 0 calc(clamp(64px,9vw,104px)/-2);border-radius:50%;display:grid;place-items:center;background:rgba(20,13,16,.55);border:1.5px solid rgba(243,223,181,.85);box-shadow:0 0 0 10px rgba(243,223,181,.08),0 10px 40px rgba(0,0,0,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:transform .35s,background .35s,box-shadow .35s;pointer-events:none}
 .play svg{width:34%;height:34%;margin-left:6%;fill:#f3dfb5}
 .film:hover .play,.film:focus-visible .play{transform:scale(1.08);background:rgba(243,223,181,.92);box-shadow:0 0 0 14px rgba(243,223,181,.14),0 10px 40px rgba(0,0,0,.5)}
 .film:hover .play svg,.film:focus-visible .play svg{fill:#140d10}
 .poster{position:relative;line-height:0;display:block;width:min(92vw,calc(70vh*var(--ar)))}
 .poster img{width:100%!important;height:auto!important}
-.room .land img,.room .land .ph{height:auto;width:calc(var(--ph)*1.3333)}
+/* pause / play for the looping animation */
+.vt{position:absolute;z-index:2;left:12px;top:12px;display:flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border-radius:99px;font-size:13px;line-height:1;color:#f3dfb5;background:rgba(20,13,16,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.vt svg{width:11px;height:11px;fill:currentColor}
+.vt:hover{background:rgba(20,13,16,.8)}
 .c{min-height:11rem}
 .room .c{width:0;min-width:100%}
 #prog{position:fixed;left:0;bottom:0;height:2px;width:0;background:var(--lamp);z-index:30}
@@ -92,27 +106,76 @@ html{scroll-snap-type:y proximity}
 .head{max-width:14ch;padding:0 4vw 6vh;font:400 clamp(2.4rem,7vw,6rem)/.95 'Instrument Serif',Georgia,serif;opacity:0;transform:translateY(14px);transition:opacity 1.2s .3s,transform 1.2s .3s}
 body.studio-on .head{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.head{opacity:1;transform:none;transition:none}.sub::after{animation:none}}
-@media(max-width:700px){.studio .w{margin-top:0!important}.room{flex-direction:column;align-items:center;gap:8vh;padding:14vh 6vw}.room::after{display:none}.c{min-height:0}.room .w img,.room .w .ph{height:auto;width:82vw}.room .film .frame,.room .film .ph,.room .land img,.room .land .ph{width:88vw}.w{grid-column:1/-1!important}.works{gap:18vh}}
+
+/* first screen on phones: the instruction, and the tap that switches on tilt */
+#intro{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;gap:22px;padding:max(24px,env(safe-area-inset-top)) 28px max(24px,env(safe-area-inset-bottom));background:var(--ink);color:var(--lamp);transition:opacity .9s}
+#intro[hidden]{display:none}
+#intro.out{opacity:0;pointer-events:none}
+#intro p{color:var(--dim);max-width:30ch}
+#intro h2{font:400 clamp(2.2rem,11vw,3.4rem)/1 'Instrument Serif',Georgia,serif;max-width:12ch}
+#intro h2 em{font-style:italic}
+#enter{align-self:flex-start;margin-top:10px;padding:13px 30px;border:1px solid var(--lamp);border-radius:99px;font-size:16px}
+#intro small{color:var(--dim);font-size:13px}
+#intro .glow{position:absolute;left:50%;top:22%;width:46vw;height:46vw;margin-left:-23vw;border-radius:50%;background:radial-gradient(circle,rgba(243,223,181,.22),transparent 68%);pointer-events:none;animation:sway 4s ease-in-out infinite alternate}
+@keyframes sway{from{transform:translateX(-16vw) rotate(-4deg)}to{transform:translateX(16vw) rotate(4deg)}}
+@media(prefers-reduced-motion:reduce){#intro .glow{animation:none}}
+
+/* phones and narrow screens */
+@media(max-width:700px){
+  html{scroll-snap-type:none}
+  header{align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:var(--bg,var(--ink));box-shadow:0 1px 0 rgba(168,149,122,.22);transition:transform .35s ease}
+  header.up{transform:translateY(-100%)}
+  .name{font-size:1.3rem}
+  header div{gap:20px}
+  .lg{display:none}.sm{display:inline}
+  #hint{left:16px;bottom:calc(16px + env(safe-area-inset-bottom))}
+  .hero{padding:0 16px 16vh}
+  .head{padding:0 16px 4vh}
+  .room{flex-direction:column;align-items:stretch;gap:9vh;min-height:0;padding:9vh 16px}
+  .room::after{display:none}
+  .room .w{width:100%}
+  .room .w img,.room .w video,.room .w .ph,.room .film .frame{width:100%;height:auto}
+  .c{min-height:0}
+  .room .c{width:auto}
+  .w h2{font-size:1.55rem}
+  .studio{padding-top:22vh}
+  footer{padding:4vh 16px calc(10vh + env(safe-area-inset-bottom))}
+  .in{padding:2vh 16px calc(2vh + env(safe-area-inset-bottom))}
+  .stage img,.stage video,.stage .ph,.poster{width:min(100%,calc(62svh*var(--ar)))}
+  .cap h2{font-size:1.6rem}
+  .bar{gap:12px;width:100%;margin-top:22px}
+  .bar button{padding:10px 0}
+}
+@media(hover:none){.lens{touch-action:pan-y}.lens:has(img){cursor:auto}}
 </style>
 </head>
 <body>
 <header>
   <span class="name">Eisha Faisal</span>
-  <div><a href="mailto:eisha.faisal02@gmail.com">eisha.faisal02@gmail.com</a><button id="lights" type="button">Turn the lights on</button></div>
+  <div><a href="mailto:eisha.faisal02@gmail.com"><span class="lg">eisha.faisal02@gmail.com</span><span class="sm">Email</span></a><button id="lights" type="button"><span class="lg">Turn the lights</span><span class="sm">Lights</span> <span id="lstate">on</span></button></div>
 </header>
 <p id="hint"></p><div id="prog"></div>
 <div class="night" aria-hidden="true"></div>
 
+<div id="intro" hidden role="dialog" aria-label="Before you enter">
+  <i class="glow" aria-hidden="true"></i>
+  <p>This work was first shown in a dark room, lit only by spotlights.</p>
+  <h2>Tilt your phone to <em>move the light.</em></h2>
+  <button id="enter" type="button">Enter</button>
+  <small>You can also drag with your finger.</small>
+</div>
+
 <section class="hero"><div><h1>I’m still someone who <em>could have.</em></h1><p class="sub"><span class="sr">A final-year immersive installation on self-sabotaging behaviour</span><span id="out" aria-hidden="true">A final-year immersive installation on self-sabotaging behaviour</span></p></div></section>
 <div id="a" aria-label="Installation"></div>
-<section class="studio"><h2 class="head">Other work on low self-worth</h2><div id="b" aria-label="Other work"></div><footer>Eisha Faisal</footer></section>
+<section class="studio"><h2 class="head">Other work on low self-worth</h2><div id="b" aria-label="Other work"></div><footer><span>Eisha Faisal</span><a href="mailto:eisha.faisal02@gmail.com">eisha.faisal02@gmail.com</a></footer></section>
 
-<dialog id="d" aria-label="Work detail"><div class="in"><div class="stage"></div><div class="cap"></div><div class="bar"><button id="prev" type="button">Previous</button><button id="close" type="button">Close</button><button id="next" type="button">Next</button></div></div></dialog>
+<dialog id="d" aria-label="Work detail"><div class="in"><div class="stage"></div><div class="cap"></div><div class="bar"><button id="prev" type="button">Previous</button><button id="full" type="button">Full screen</button><button id="close" type="button">Close</button><button id="next" type="button">Next</button></div></div></dialog>
 
 <script>
 /* EDIT HERE. Ruskin asks for title, medium, size and date only, so keep captions to those. */
 const VIMEO_SRC = ""; /* paste your Vimeo player link, e.g. https://player.vimeo.com/video/123456789?h=abcdef */
-/* img: path or URL of your photo. r: shape of the image, width/height (3/4 portrait, 1/1 square, 4/3 landscape) */
+/* img: path or URL of your photo. r: shape of the image, width/height (3/4 portrait, 1/1 square, 4/3 landscape)
+   video: a short looping clip (img is then its first frame) */
 const INSTALL = [ /* room: pieces with the same number share one screen */
   {t:"Protagonist’s Most Recent Sabotage (front view)",m:"Cloth, wire mesh, fishing wire",s:"6 feet tall",d:"2026",img:"images/protagonist-most-recent-sabotage.jpg",r:"3/4",room:0},
   {t:"Protagonist’s Most Recent Sabotage (back view)",m:"Cloth, wire mesh, fishing wire, plaster of Paris, spray foam, spray paint, rubber, plastic mannequin torso",s:"6 feet tall",d:"2026",img:"images/protagonist-most-recent-sabotage-back.jpg",r:"3/4",room:0},
@@ -126,41 +189,70 @@ const PRACTICE = [
   {t:"The Heaviest Chains Are the Ones That We Forge in Our Own Minds",m:"Digital collage of scanned hand lettering on paper",s:"A3",d:"2024",img:"images/lettering.jpg",r:"1822/2576",room:4},
   {t:"You Are Your Own Adversary",m:"Cardboard, mirror, wood, fabric, foam sheet",s:"3.5 feet tall",d:"2024",img:"images/you-are-your-own-adversary.jpg",r:"1753/2576",room:4},
   {t:"Hidden Self",m:"Cloth, duct tape, wool, mannequin head, wig, gloves, shoes, lino prints, acrylic paint, chart paper",s:"5 feet tall",d:"2024",img:"images/hidden-self.jpg",r:"1595/2576",room:4},
-  {t:"Defective Piece",m:"Lino print",s:"A3",d:"2024",img:"images/defective-piece.jpg",r:"2576/1978",room:5}
+  {t:"Defective Piece",m:"Lino print",s:"A3",d:"2024",img:"images/defective-piece.jpg",r:"2576/1978",room:5},
+  {t:"Mixed Media Animation",m:"Mixed media animation",s:"5 seconds, looped",d:"",video:"images/mixed-media-animation.mp4",img:"images/mixed-media-animation.jpg",r:"16/9",room:5}
 ];
 /* ---------- */
 const WORKS=[...INSTALL,...PRACTICE];
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches, touch=matchMedia('(hover:none) and (pointer:coarse)').matches;
 function ar(w){return w.r?(([a,b])=>a/b)(w.r.split('/')):(w.film?16/9:3/4)}
+const lines=w=>[w.m,w.s,w.d].filter(Boolean).join('<br>');
 const root=document.documentElement, hint=document.getElementById('hint');
 const PLAY='<span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z"/></svg></span>';
-const media=w=>w.film&&w.img?`<span class="frame" style="--ar:${ar(w)}"><img src="${w.img}" alt="${w.t}" loading="lazy" style="aspect-ratio:${w.r}">${PLAY}</span>`:w.img?`<img src="${w.img}" alt="${w.t}" loading="lazy" style="aspect-ratio:${w.r||'3/4'}">`:`<div class="ph" style="aspect-ratio:${w.film?'16/9':(w.r||'3/4')}">${w.film?'Video poster':'Image goes here'}</div>`;
+const ICON={pause:'<svg viewBox="0 0 12 12"><path d="M2 1h3v10H2zM7 1h3v10H7z"/></svg>',play:'<svg viewBox="0 0 12 12"><path d="M2 1v10l9-5z"/></svg>'};
+const vid=w=>`<video src="${w.video}" poster="${w.img}" muted loop playsinline preload="${calm?'none':'auto'}" aria-label="${w.t}" style="aspect-ratio:${w.r};--ar:${ar(w)}"></video>`;
+const media=w=>w.video?vid(w):w.film&&w.img?`<span class="frame" style="--ar:${ar(w)}"><img src="${w.img}" alt="${w.t}" loading="lazy" style="aspect-ratio:${w.r}">${PLAY}</span>`:w.img?`<img src="${w.img}" alt="${w.t}" loading="lazy" style="aspect-ratio:${w.r||'3/4'}">`:`<div class="ph" style="aspect-ratio:${w.film?'16/9':(w.r||'3/4')}">${w.film?'Video poster':'Image goes here'}</div>`;
+
+/* a looping clip with its own pause / play switch; remembers if the visitor paused it */
+function loopVideo(v,btn){
+  v.muted=true;let held=calm,seen=false;
+  const paint=()=>{const on=!v.paused;btn.innerHTML=(on?ICON.pause:ICON.play)+(on?'Pause':'Play');btn.setAttribute('aria-label',(on?'Pause':'Play')+' animation')};
+  const go=()=>{if(!held&&seen)v.play().catch(()=>{})};
+  btn.onclick=e=>{e.stopPropagation();held=!v.paused;held?v.pause():(v.play().catch(()=>{}))};
+  v.addEventListener('play',paint);v.addEventListener('pause',paint);paint();
+  new IntersectionObserver(([e])=>{seen=e.isIntersecting;seen?go():v.pause()}).observe(v);
+}
+
 function mount(list,el,off){const rooms={};list.forEach((w,i)=>{
   const r=rooms[w.room]||(rooms[w.room]=Object.assign(document.createElement('div'),{className:'room'}));
-  const b=document.createElement('button');b.type='button';b.className='w'+(w.film?' film':'')+(w.r==='4/3'?' land':'');
-  b.innerHTML=`${media(w)}<div class="c"><h2>${w.t}</h2><p>${w.m}<br>${w.s}<br>${w.d}</p></div>`;
-  b.onclick=()=>show(off+i,b.querySelector("img,.ph"));b.onfocus=()=>{aim(b);rt=Math.max(b.offsetWidth,b.offsetHeight)*.8};r.append(b)});
-  Object.values(rooms).forEach(r=>{r.classList.add('n'+r.children.length);el.append(r)})}
+  r.sum=(r.sum||0)+ar(w);
+  const inner=`${media(w)}<div class="c"><h2>${w.t}</h2><p>${lines(w)}</p></div>`;
+  let b,hit;
+  if(w.video){ /* a button can't hold another button, so the clip gets a wrapper */
+    b=document.createElement('div');b.className='w vidw';
+    b.innerHTML=`<button type="button" class="open">${inner}</button><button type="button" class="vt"></button>`;
+    hit=b.querySelector('.open');loopVideo(b.querySelector('video'),b.querySelector('.vt'));
+  }else{
+    b=hit=document.createElement('button');b.type='button';b.className='w'+(w.film?' film':'');b.innerHTML=inner;
+  }
+  hit.onclick=()=>show(off+i,b.querySelector("img,video,.ph"));hit.onfocus=()=>{aim(b);rt=Math.max(b.offsetWidth,b.offsetHeight)*.8};r.append(b)});
+  Object.values(rooms).forEach(r=>{r.style.setProperty('--n',r.children.length);r.style.setProperty('--sum',r.sum.toFixed(4));el.append(r)})}
 mount(INSTALL,document.getElementById('a'),0);
 mount(PRACTICE,document.getElementById('b'),INSTALL.length);
-const prog=document.getElementById('prog');
+
+const prog=document.getElementById('prog'),header=document.querySelector('header'),narrow=matchMedia('(max-width:700px)');
 /* house lights: as the studio scrolls up from the bottom of the screen, the spotlight opens out,
    the dark lifts and the room warms to paper. Tied to scroll, so it moves only as you move. */
-const studio=document.querySelector('.studio');let pt=0,lt=0;
+const studio=document.querySelector('.studio');let pt=0,lt=0,lastY=scrollY;
 function onScroll(){
   prog.style.width=100*scrollY/Math.max(1,root.scrollHeight-innerHeight)+'%';
   const top=studio.getBoundingClientRect().top;
   pt=Math.min(1,Math.max(0,(innerHeight*.95-top)/(innerHeight*.7)));
   document.body.classList.toggle('studio-on',pt>.8);
+  if(scrollY>innerHeight*.3)hint.classList.add('gone');
+  /* on phones the header bar slips away while you read down, and comes back as soon as you scroll up */
+  const dy=scrollY-lastY;
+  if(narrow.matches&&Math.abs(dy)>6){header.classList.toggle('up',dy>0&&scrollY>80);lastY=scrollY}
+  if(!narrow.matches)header.classList.remove('up');
 }
 addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);onScroll();
 const C={bg:[[20,13,16],[234,220,189]],lamp:[[243,223,181],[42,28,24]],dim:[[168,149,122],[109,91,73]]};
 const mix=(k,p)=>'rgb('+C[k][0].map((a,i)=>Math.round(a+(C[k][1][i]-a)*p)).join(',')+')';
 
 /* the lamp */
-const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const hb=document.querySelector(".hero div").getBoundingClientRect();
-let tx=hb.left+Math.min(hb.width,innerWidth*.6)*.45,ty=hb.top+hb.height/2,x=tx,y=ty,t=0;
-hint.textContent=matchMedia('(hover:none)').matches?'Drag to move the light.':'Move the light.';
+let tx=hb.left+Math.min(hb.width,innerWidth*.6)*.45,ty=hb.top+hb.height/2,x=tx,y=ty;
+hint.textContent=touch?'Drag to move the light.':'Move the light.';
 let rt=420,rr=420,idle,ps=pt,ls=0,last='';
 (function loop(){
   x+=(tx-x)*(calm?1:.1);y+=(ty-y)*(calm?1:.1);rr+=(rt-rr)*(calm?1:.06);
@@ -170,24 +262,49 @@ let rt=420,rr=420,idle,ps=pt,ls=0,last='';
   root.style.setProperty('--r',rr+e*Math.max(innerWidth,innerHeight)*1.4+'px');
   root.style.setProperty('--night',((1-e)*(1-ls)).toFixed(3));
   const key=e.toFixed(3);
-  if(key!==last){last=key;root.style.setProperty('--bg',mix('bg',e));const q=Math.min(1,Math.max(0,(e-.35)/.3)),tq=q*q*(3-2*q); /* text flips over quickly so it never sits at low contrast */
+  if(key!==last){last=key;root.style.setProperty('--bg',mix('bg',e));
+    const q=Math.min(1,Math.max(0,(e-.35)/.3)),tq=q*q*(3-2*q); /* text flips over quickly so it never sits at low contrast */
     root.style.setProperty('--lamp',mix('lamp',tq));root.style.setProperty('--dim',mix('dim',tq))}
   requestAnimationFrame(loop);
 })();
 const arm=()=>{clearTimeout(idle);idle=setTimeout(cue,1400)};
 const move=(a,b)=>{tx=a;ty=b;rt=300;hint.classList.add('gone');arm()};
 function cue(){ /* pause and the light finds the piece on screen */
-  if(document.body.classList.contains('studio-on'))return;
+  if(document.body.classList.contains('studio-on')||tilting)return;
   let best,bd=1e9;document.querySelectorAll('#a .room').forEach(r=>{const q=r.getBoundingClientRect(),d=Math.abs(q.top+q.height/2-innerHeight/2);if(d<bd){bd=d;best=q}});
   if(!best||bd>innerHeight*.6)return;
   tx=innerWidth/2;ty=Math.max(0,Math.min(innerHeight,best.top+best.height/2));rt=Math.min(innerWidth*.6,innerHeight*.85)}
-addEventListener('pointermove',e=>move(e.clientX,e.clientY));
-['touchstart','touchmove'].forEach(n=>addEventListener(n,e=>move(e.touches[0].clientX,e.touches[0].clientY),{passive:true}));
+addEventListener('pointermove',e=>{if(e.pointerType==='mouse')move(e.clientX,e.clientY)});
+['touchstart','touchmove'].forEach(n=>addEventListener(n,e=>{if(!tilting)move(e.touches[0].clientX,e.touches[0].clientY)},{passive:true}));
 addEventListener('scroll',arm,{passive:true});
 function aim(el){const r=el.getBoundingClientRect();move(r.left+r.width/2,r.top+r.height/2)}
 
-const lb=document.getElementById('lights');
-lb.onclick=()=>{const on=document.body.classList.toggle('lit');lt=on?1:0;lb.textContent=on?'Turn the lights off':'Turn the lights on'};
+/* tilt: the phone becomes the torch. The angle you hold it at when you enter is "centre",
+   and that centre slowly follows you so the light never gets stuck at an edge. */
+let tilting=false,base=null;
+function tilt(e){
+  if(e.beta==null||e.gamma==null)return;
+  let b=e.beta,g=e.gamma;const a=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+  if(a===90)[b,g]=[-g,b];else if(a===270||a===-90)[b,g]=[g,-b];
+  if(!base)base=[b,g];base[0]+=(b-base[0])*.004;base[1]+=(g-base[1])*.004;
+  const k=v=>Math.max(-1,Math.min(1,v/20));
+  tilting=true;tx=innerWidth/2+k(g-base[1])*innerWidth*.55;ty=innerHeight/2+k(b-base[0])*innerHeight*.5;rt=Math.min(innerWidth*.62,300);
+}
+let ready,started=new Promise(r=>ready=r);
+const intro=document.getElementById('intro');
+if(touch&&'DeviceOrientationEvent' in window){
+  intro.hidden=false;document.body.style.overflow='hidden';
+  document.getElementById('enter').onclick=async()=>{
+    /* iPhones (and some newer browsers) ask first; the tap on Enter is what lets them ask */
+    try{if(typeof DeviceOrientationEvent.requestPermission==='function')await DeviceOrientationEvent.requestPermission()}catch(_){}
+    addEventListener('deviceorientation',tilt); /* if motion is refused or missing, no events arrive and dragging still works */
+    intro.classList.add('out');document.body.style.overflow='';setTimeout(()=>intro.hidden=true,900);ready();
+    setTimeout(()=>{hint.textContent=tilting?'Tilt to move the light.':'Drag to move the light.';hint.classList.remove('gone')},1000);
+  };
+}else ready();
+
+const lb=document.getElementById('lights'),ls_=document.getElementById('lstate');
+lb.onclick=()=>{const on=document.body.classList.toggle('lit');lt=on?1:0;ls_.textContent=on?'off':'on'};
 
 /* subheading: types itself, stumbles on "self-sabotaging", erases it, then gets it right */
 (async()=>{
@@ -197,39 +314,61 @@ lb.onclick=()=>{const on=document.body.classList.toggle('lit');lt=on?1:0;lb.text
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const typeTo=async(t,ms)=>{while(txt.length<t.length){txt=t.slice(0,txt.length+1);out.textContent=txt;await wait(ms)}};
   const eraseTo=async(n,ms)=>{while(txt.length>n){txt=txt.slice(0,-1);out.textContent=txt;await wait(ms)}};
-  await wait(1400);await typeTo(HEAD+'self-sab',55);
+  await started;await wait(1400);await typeTo(HEAD+'self-sab',55);
   await wait(650);rt=170;await eraseTo(HEAD.length,38);
   await wait(900);rt=420;await typeTo(FULL,55);out.parentNode.classList.add('done');
 })();
 
 /* detail view: the piece lifts out of the dark, flickers on like the installation lights, and the light becomes a lens */
-const d=document.getElementById('d'),st=d.querySelector('.stage');let cur=0;
+const d=document.getElementById('d'),st=d.querySelector('.stage'),fb=document.getElementById('full');let cur=0;
 function show(i,from){
   cur=(i+WORKS.length)%WORKS.length;const w=WORKS[cur],v=`aspect-ratio:${w.r||'3/4'};--ar:${ar(w)}`;
-  st.innerHTML=w.film
+  st.style.setProperty('--ar',ar(w));
+  st.innerHTML=w.video
+    ?`<div class="lens">${vid(w)}<button type="button" class="vt"></button></div>`
+    :w.film
     ?(VIMEO_SRC?`<iframe src="${VIMEO_SRC}${VIMEO_SRC.includes('?')?'&':'?'}autoplay=1" title="${w.t}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`:`<div class="poster" style="--ar:${ar(w)}"><img src="${w.img}" alt="${w.t}">${PLAY}</div>`)
     :`<div class="lens">${w.img?`<img src="${w.img}" alt="${w.t}" style="${v}">`:`<div class="ph" style="${v}">Image goes here</div>`}${cur<INSTALL.length?'<i class="beam"></i><i class="flick"></i><i class="bulb"></i>':''}</div>`;
-  d.querySelector('.cap').innerHTML=`<h2>${w.t}</h2><p>${w.m}<br>${w.s}<br>${w.d}</p>`;
+  if(w.video)loopVideo(st.querySelector('video'),st.querySelector('.vt'));
+  d.querySelector('.cap').innerHTML=`<h2>${w.t}</h2><p>${lines(w)}</p>`;
   const opening=!d.open;if(opening)d.showModal();
-  const m=st.querySelector('img,.ph,iframe');
-  if(!calm){
-    if(opening&&from&&m){const f=from.getBoundingClientRect(),l=m.getBoundingClientRect();m.style.transformOrigin='0 0';
-      m.animate([{transform:`translate(${f.left-l.left}px,${f.top-l.top}px) scale(${f.width/l.width},${f.height/l.height})`},{transform:'none'}],{duration:650,easing:'cubic-bezier(.2,.8,.2,1)'})}
-    }
+  const m=st.querySelector('img,video,.ph,iframe');
+  if(!calm&&opening&&from&&m){const f=from.getBoundingClientRect(),l=m.getBoundingClientRect();m.style.transformOrigin='0 0';
+    m.animate([{transform:`translate(${f.left-l.left}px,${f.top-l.top}px) scale(${f.width/l.width},${f.height/l.height})`},{transform:'none'}],{duration:650,easing:'cubic-bezier(.2,.8,.2,1)'})}
   lens();
 }
-function lens(){const wrap=st.querySelector('.lens'),img=wrap&&wrap.querySelector('img');if(!img)return;
+function lens(){const wrap=st.querySelector('.lens'),img=wrap&&wrap.querySelector('img');if(!img||touch)return;
   const Z=2.6,L=90,lp=document.createElement('i');lp.className='loupe';wrap.append(lp);
   const go=e=>{const r=img.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
     if(px<0||py<0||px>r.width||py>r.height){lp.style.opacity=0;return}
     lp.style.cssText=`opacity:1;left:${px-L}px;top:${py-L}px;background-image:url("${img.src}");background-size:${r.width*Z}px ${r.height*Z}px;background-position:${L-px*Z}px ${L-py*Z}px`};
   wrap.onpointermove=go;wrap.onpointerdown=go;wrap.onpointerleave=()=>lp.style.opacity=0}
+
+/* full screen: the real thing where the browser allows it, otherwise the piece fills the window */
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
+function full(){
+  if(fsEl()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  if(d.classList.contains('full')){d.classList.remove('full');label();return}
+  const req=st.requestFullscreen||st.webkitRequestFullscreen;
+  if(req)Promise.resolve(req.call(st)).catch(()=>{d.classList.add('full');label()});
+  else{d.classList.add('full');label()}
+}
+const label=()=>{fb.textContent=fsEl()||d.classList.contains('full')?'Exit full screen':'Full screen'};
+['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,label));
+fb.onclick=full;
 document.getElementById('prev').onclick=()=>show(cur-1);
 document.getElementById('next').onclick=()=>show(cur+1);
 document.getElementById('close').onclick=()=>d.close();
-d.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1)});
-d.addEventListener('close',()=>st.innerHTML='');
-d.addEventListener('click',e=>{if(!e.target.closest('.lens,.poster,iframe,.cap,.bar,.ph'))d.close()});
+d.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1);if(e.key==='f')full()});
+d.addEventListener('close',()=>{st.innerHTML='';if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);d.classList.remove('full');label()});
+d.addEventListener('click',e=>{
+  if(d.classList.contains('full')&&!e.target.closest('.vt')){d.classList.remove('full');label();return}
+  if(!e.target.closest('.lens,.poster,iframe,.cap,.bar,.ph'))d.close()});
+/* swipe left / right between pieces on phones */
+let sx=null,sy=0;
+st.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+st.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4&&!fsEl()&&!d.classList.contains('full'))show(cur+(dx<0?1:-1))});
 </script>
 </body>
 </html>
