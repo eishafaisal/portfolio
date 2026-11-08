@@ -142,7 +142,8 @@ body.studio-on .head{opacity:1;transform:none}
   .studio{padding-top:22vh}
   footer{padding:4vh 16px calc(10vh + env(safe-area-inset-bottom))}
   .in{padding:2vh 16px calc(2vh + env(safe-area-inset-bottom))}
-  .stage img,.stage video,.stage .ph,.poster{width:min(100%,calc(62svh*var(--ar)))}
+  /* sized from the screen, not the frame, so the frame hugs the piece and it stays centred */
+  .stage img,.stage video,.stage .ph,.poster{width:min(calc(100vw - 32px),calc(62svh*var(--ar)))}
   .cap h2{font-size:1.6rem}
   .bar{gap:12px;width:100%;margin-top:22px}
   .bar button{padding:10px 0}
