@@ -45,7 +45,9 @@ header div{align-items:baseline}
 .sm{display:none}
 #hint{position:fixed;z-index:20;left:clamp(16px,4vw,40px);bottom:20px;color:var(--dim);transition:opacity 1.2s}
 #hint.gone{opacity:0}
-.night{position:fixed;inset:0;z-index:10;pointer-events:none;opacity:var(--night,1);
+/* taller than the screen: when a phone's address bar slides away on the first scroll, the screen grows
+   for a moment before this layer does, which left an undimmed strip with a hard edge at the bottom */
+.night{position:fixed;inset:0 0 auto;height:calc(100vh + 160px);height:calc(100lvh + 160px);z-index:10;pointer-events:none;opacity:var(--night,1);
 background:radial-gradient(circle var(--r) at var(--x) var(--y),rgba(20,13,16,0) 0,rgba(20,13,16,.4) 55%,rgba(20,13,16,.97) 100%)} /* rgba(…,0), not "transparent": Safari fades it the same as Chrome */
 .hero{min-height:100svh;display:flex;align-items:flex-end;padding:0 clamp(16px,4vw,40px) 14vh}
 h1{font:400 clamp(2.8rem,10vw,9rem)/.92 'Instrument Serif',Georgia,serif;max-width:11ch;letter-spacing:-.01em}
@@ -228,7 +230,7 @@ const INSTALL = [ /* room: pieces with the same number share one screen */
   {t:"Sabotaged Stop Motion",m:"Cardboard, modelling clay, acrylic paint, wire, wire mesh, plastic mesh, handmade paper, wood, laces, miniature newspapers, mirror, small objects",s:"5 feet tall",d:"2026",img:"images/sabotaged-stop-motion.jpg",r:"3/4",room:1},
   {t:"Sabotaged Paintings",m:"Canvas, acrylic paint, wood",s:"5 feet tall",d:"2026",img:"images/sabotaged-paintings.jpg",r:"3/4",room:2},
   {t:"Childhood Drawing",m:"Oil pastels, paper, wood, wire, papier-mâché, modelling paste, nails, washers",s:"7 feet tall",d:"2026",img:"images/childhood-drawing.jpg",r:"3/4",room:2},
-  {t:"I’m Still Someone Who Could Have",m:"Installation film with audio and synchronized lighting",s:"9 minutes",d:"2026",img:"images/film-thumbnail.jpg",r:"2576/1714",film:true,room:3}
+  {t:"I’m Still Someone Who Could Have",m:"Video of the installation, with audio and synchronized lighting",s:"9 minutes",d:"2026",img:"images/film-thumbnail.jpg",r:"2576/1714",film:true,room:3}
 ];
 const PRACTICE = [
   {t:"The Heaviest Chains Are the Ones That We Forge in Our Own Minds",m:"Digital collage of scanned hand lettering on paper",s:"A3",d:"2024",img:"images/lettering.jpg",r:"1822/2576",room:4},
