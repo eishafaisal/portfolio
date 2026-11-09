@@ -17,7 +17,9 @@ a{color:inherit}
 header{position:fixed;inset:0 0 auto;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px clamp(16px,4vw,40px);background:var(--bg,var(--ink));box-shadow:0 1px 0 rgba(168,149,122,.22)}
 .name{font:italic 1.4rem 'Instrument Serif',Georgia,serif}
 header div{display:flex;gap:24px}
-#lights{border-bottom:1px solid currentColor;padding-bottom:1px}
+/* one underline style for both header links: same thickness, same gap, softened until hovered */
+header a,#lights{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;text-decoration-color:rgba(168,149,122,.55);transition:text-decoration-color .3s}
+header a:hover,#lights:hover{text-decoration-color:currentColor}
 .sm{display:none}
 #hint{position:fixed;z-index:20;left:clamp(16px,4vw,40px);bottom:20px;color:var(--dim);transition:opacity 1.2s}
 #hint.gone{opacity:0}
@@ -47,7 +49,9 @@ dialog::backdrop{background:rgba(10,6,8,.95)}
 .loupe{position:absolute;width:180px;height:180px;border-radius:50%;pointer-events:none;opacity:0;background-repeat:no-repeat;box-shadow:0 0 0 1px rgba(243,223,181,.55),0 0 70px rgba(243,223,181,.4);transition:opacity .2s}
 .cap{text-align:center}
 .cap h2{font:italic 400 2rem/1.1 'Instrument Serif',Georgia,serif;margin:16px 0 4px}
-.bar{display:grid;grid-template-columns:1fr auto auto 1fr;align-items:center;gap:28px;width:min(560px,92vw);margin-top:18px}
+.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;width:min(520px,92vw);margin-top:18px}
+.tip{margin-top:12px;font-size:12.5px;color:var(--dim);opacity:.8}
+.lens,.poster{cursor:zoom-in}
 .bar #prev{justify-self:start}.bar #next{justify-self:end}
 /* full screen: the piece alone on black */
 .stage:fullscreen{background:#0a0608;width:100vw;height:100vh}
@@ -181,7 +185,7 @@ body.studio-on .head{opacity:1;transform:none}
 <div id="a" aria-label="Installation"></div>
 <section class="studio"><h2 class="head">Other work on low self-worth</h2><div id="b" aria-label="Other work"></div><footer><span>Eisha Faisal</span><a href="mailto:eisha.faisal02@gmail.com">eisha.faisal02@gmail.com</a></footer></section>
 
-<dialog id="d" aria-label="Work detail"><div class="in"><div class="stage"></div><div class="cap"></div><div class="bar"><button id="prev" type="button">Previous</button><button id="full" type="button">Full screen</button><button id="close" type="button">Close</button><button id="next" type="button">Next</button></div></div></dialog>
+<dialog id="d" aria-label="Work detail"><div class="in"><div class="stage"></div><div class="cap"></div><div class="bar"><button id="prev" type="button">Previous</button><button id="close" type="button">Close</button><button id="next" type="button">Next</button></div><p class="tip" id="fstip"></p></div></dialog>
 
 <script>
 /* EDIT HERE. Ruskin asks for title, medium, size and date only, so keep captions to those. */
@@ -294,25 +298,31 @@ function aim(el){const r=el.getBoundingClientRect();move(r.left+r.width/2,r.top+
 /* tilt: the phone becomes the torch. The angle you hold it at when you enter is "centre",
    and that centre slowly follows you so the light never gets stuck at an edge. */
 let base=null,gyro=false,since=0,sb=null,sg=null;
-function tilt(e){ /* gyroscope angles: iPhones and most Android phones */
-  if(e.beta==null||e.gamma==null||(e.beta===0&&e.gamma===0))return;gyro=true; /* all-zero readings mean no real sensor */aim2(e.beta,e.gamma)}
-function motion(e){ /* phones without a gyroscope: work the angles out from gravity instead.
+/* The phone's angles (beta/gamma) jump about when it's held near upright: the side-to-side
+   reading can leap by 90-180° for a tiny movement, which threw the light to the edges on Android.
+   So instead we work out which way is "up" for the phone (a direction that always changes
+   smoothly) and measure the tilt from that. */
+function tilt(e){ /* gyroscope: iPhones and most Android phones */
+  if(e.beta==null||e.gamma==null||(e.beta===0&&e.gamma===0))return;gyro=true; /* all-zero readings mean no real sensor */
+  const R=Math.PI/180,b=e.beta*R,g=e.gamma*R;aim2(-Math.sin(g)*Math.cos(b),Math.sin(b),Math.cos(g)*Math.cos(b))}
+function motion(e){ /* phones without a gyroscope: gravity gives the same "up" direction.
   Only used if the gyroscope has stayed silent for a second, so the two never fight. */
   const a=e.accelerationIncludingGravity;if(gyro||performance.now()-since<1000||!a||a.x==null)return;
-  const D=180/Math.PI;aim2(Math.atan2(a.y,a.z)*D,Math.atan2(-a.x,Math.hypot(a.y,a.z))*D)}
+  const n=Math.hypot(a.x,a.y,a.z)||1;aim2(a.x/n,a.y/n,a.z/n)}
 function listen(){if(since)return;since=performance.now();addEventListener('deviceorientation',tilt);addEventListener('devicemotion',motion)}
-function aim2(b,g){
+function aim2(ux,uy,uz){ /* ux,uy,uz: the direction of "up", seen from the phone */
   const a=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
-  if(a===90)[b,g]=[-g,b];else if(a===270||a===-90)[b,g]=[g,-b];
-  g=Math.max(-60,Math.min(60,g));
-  /* smooth the raw readings so the small shakes of a hand don't reach the light */
-  if(sb==null){sb=b;sg=g}else{sb+=(b-sb)*.22;sg+=(g-sg)*.22}
-  /* centre = how you hold the phone; it follows you only very slowly, so a held tilt stays put */
-  if(!base)base=[sb,sg];base[0]+=(sb-base[0])*.0015;base[1]+=(sg-base[1])*.0015;
+  if(a===90)[ux,uy]=[-uy,ux];else if(a===270||a===-90)[ux,uy]=[uy,-ux];
+  const D=180/Math.PI,side=Math.asin(Math.max(-1,Math.min(1,-ux)))*D,fwd=Math.atan2(uy,uz)*D;
+  /* smooth the readings so the small shakes of a hand don't reach the light */
+  if(sb==null){sb=fwd;sg=side}else{sb+=(fwd-sb)*.22;sg+=(side-sg)*.22}
+  /* centre = how you hold the phone; it follows you only very slowly, so a held tilt stays put.
+     The side-to-side scale is set from that hold, so a sideways tilt feels the same at any angle. */
+  if(!base)base=[sb,sg,1/Math.max(.5,Math.hypot(ux,uz))];base[0]+=(sb-base[0])*.0015;base[1]+=(sg-base[1])*.0015;
   /* a gentle 25° tilt reaches the edge; a tiny dead zone keeps the light still while you hold steady */
   const k=v=>{const s=Math.max(0,Math.abs(v)-1.2)/24;return Math.sign(v)*Math.min(1,s)};
   const [W,H]=view();
-  tilting=true;tx=W/2+k(sg-base[1])*W*.55;ty=H/2+k(sb-base[0])*H*.5;rt=phoneR();
+  tilting=true;tx=W/2+k((sg-base[1])*base[2])*W*.55;ty=H/2+k(sb-base[0])*H*.5;rt=phoneR();
 }
 let ready,started=new Promise(r=>ready=r);
 const intro=document.getElementById('intro');
@@ -349,7 +359,7 @@ lb.onclick=()=>{const on=document.body.classList.toggle('lit');lt=on?1:0;ls_.tex
 })();
 
 /* detail view: the piece lifts out of the dark, flickers on like the installation lights, and the light becomes a lens */
-const d=document.getElementById('d'),st=d.querySelector('.stage'),fb=document.getElementById('full');let cur=0;
+const d=document.getElementById('d'),st=d.querySelector('.stage');let cur=0;
 function show(i,from){
   cur=(i+WORKS.length)%WORKS.length;const w=WORKS[cur],v=`aspect-ratio:${w.r||'3/4'};--ar:${ar(w)}`;
   if(typeof Z!=='undefined'){Z.s=1;Z.x=Z.y=0}
@@ -385,7 +395,8 @@ function full(e){
   else if(v&&v.webkitEnterFullscreen)v.webkitEnterFullscreen(); /* iPhone: its own video player, full screen */
   else{d.classList.add('full');label()} /* iPhone photos: the piece fills the whole screen on black */
 }
-const label=()=>{fb.textContent=fsEl()||d.classList.contains('full')?'Exit full screen':'Full screen'};
+const label=()=>{}; /* (there's no full screen button any more; tapping the piece opens it) */
+document.getElementById('fstip').textContent=touch?'Tap the piece to see it full screen':'Click the piece to see it full screen';
 ['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,()=>{label();if(!fsEl())resetZ()}));
 st.dataset.tip=touch?'Pinch to zoom · tap to exit':'Scroll to zoom · click to exit';
 
@@ -429,7 +440,6 @@ function endP(e){
   else{tapT=now;if(Z.s<=1.05)exitT=setTimeout(exitFull,320)}} /* single tap, once it's clear it isn't a double */
 st.addEventListener('pointerup',endP);st.addEventListener('pointercancel',endP);
 st.addEventListener('wheel',e=>{if(!isFull()||!zt())return;e.preventDefault();zoomTo(Z.s*Math.exp(-e.deltaY*.0015),e.clientX,e.clientY)},{passive:false});
-fb.onclick=full;
 document.getElementById('prev').onclick=()=>show(cur-1);
 document.getElementById('next').onclick=()=>show(cur+1);
 document.getElementById('close').onclick=()=>d.close();
@@ -437,7 +447,8 @@ d.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(cur+1);if(e.key===
 d.addEventListener('close',()=>{st.innerHTML='';if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);d.classList.remove('full');label();Z.s=1;Z.x=Z.y=0;pts.clear()});
 d.addEventListener('click',e=>{
   if(isFull())return; /* in full screen, taps are handled by the zoom code above */
-  if(!e.target.closest('.lens,.poster,iframe,.cap,.bar,.ph'))d.close()});
+  if(e.target.closest('.lens,.poster')&&!e.target.closest('.vt')&&zt()){full(e);return} /* tap the piece: full screen */
+  if(!e.target.closest('.lens,.poster,iframe,.cap,.bar,.ph,.tip'))d.close()});
 /* swipe left / right between pieces on phones */
 let sx=null,sy=0;
 st.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
