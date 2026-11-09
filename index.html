@@ -4,6 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Eisha Faisal</title>
+<meta name="description" content="Fine Art portfolio of Eisha Faisal: an immersive installation on self-sabotage, shown by spotlight, and other work on low self-worth.">
+<meta name="theme-color" content="#140d10">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eisha Faisal">
+<meta property="og:title" content="I’m still someone who could have — Eisha Faisal">
+<meta property="og:description" content="An immersive installation on self-sabotage, shown the way it was seen: by spotlight. Fine Art portfolio.">
+<meta property="og:url" content="https://eishafaisal.github.io/portfolio/">
+<meta property="og:image" content="https://eishafaisal.github.io/portfolio/preview.jpg">
+<meta property="og:image:secure_url" content="https://eishafaisal.github.io/portfolio/preview.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A sculpture draped in a white sheet, lit by a single hanging bulb in a dark room, beside the title I’m still someone who could have.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="I’m still someone who could have — Eisha Faisal">
+<meta name="twitter:description" content="An immersive installation on self-sabotage, shown the way it was seen: by spotlight.">
+<meta name="twitter:image" content="https://eishafaisal.github.io/portfolio/preview.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -20,6 +39,9 @@ header div{display:flex;gap:24px}
 /* one underline style for both header links: same thickness, same gap, softened until hovered */
 header a,#lights{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;text-decoration-color:rgba(168,149,122,.55);transition:text-decoration-color .3s}
 header a:hover,#lights:hover{text-decoration-color:currentColor}
+/* the lights switch is a button, and browsers pad buttons; without this its text and line sit 1px lower than the email's */
+#lights{padding:0;line-height:inherit}
+header div{align-items:baseline}
 .sm{display:none}
 #hint{position:fixed;z-index:20;left:clamp(16px,4vw,40px);bottom:20px;color:var(--dim);transition:opacity 1.2s}
 #hint.gone{opacity:0}
