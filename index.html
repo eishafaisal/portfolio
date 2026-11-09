@@ -66,11 +66,9 @@ dialog::backdrop{background:rgba(10,6,8,.95)}
 .in{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3vh 4vw;background:radial-gradient(circle at 50% 42%,rgba(243,223,181,.1),transparent 62%)}
 .stage{display:flex;justify-content:center;align-items:center}
 .lens{position:relative;line-height:0;touch-action:none}
-.lens:has(img){cursor:none}
 .stage img,.stage video{display:block}
 .stage img,.stage video,.stage .ph{height:auto;width:min(92vw,calc(70vh*var(--ar)))}
 .stage iframe{border:0;display:block;width:min(92vw,calc(70vh*1.78));aspect-ratio:16/9}
-.loupe{position:absolute;width:180px;height:180px;border-radius:50%;pointer-events:none;opacity:0;background-repeat:no-repeat;box-shadow:0 0 0 1px rgba(243,223,181,.55),0 0 70px rgba(243,223,181,.4);transition:opacity .2s}
 .cap{text-align:center}
 .cap h2{font:italic 400 2rem/1.1 'Instrument Serif',Georgia,serif;margin:16px 0 4px}
 .bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;width:min(520px,92vw);margin-top:18px}
@@ -82,18 +80,18 @@ dialog.full .ftip,.stage:fullscreen .ftip{display:none}
 /* full screen: the piece alone on black */
 .stage:fullscreen{background:#0a0608;width:100vw;height:100vh}
 .stage:fullscreen img,.stage:fullscreen video,.stage:fullscreen .poster{width:min(100vw,calc(100vh*var(--ar)))!important}
-.stage:fullscreen .loupe{display:none}
 .stage:-webkit-full-screen{background:#0a0608;width:100vw;height:100vh}
 .stage:-webkit-full-screen img,.stage:-webkit-full-screen video,.stage:-webkit-full-screen .poster{width:min(100vw,calc(100vh*var(--ar)))!important}
 dialog.full .stage{position:fixed;inset:0;z-index:5;background:#0a0608}
 dialog.full .stage img,dialog.full .stage video,dialog.full .stage .poster{width:min(100vw,calc(100svh*var(--ar)))!important}
-dialog.full .cap,dialog.full .bar,dialog.full .loupe{display:none}
+dialog.full .cap,dialog.full .bar{display:none}
 /* zooming in full screen: the page stops scrolling so two fingers move the piece instead */
 .stage:fullscreen{position:relative;overflow:hidden;touch-action:none}
 .stage:-webkit-full-screen{position:relative;overflow:hidden;touch-action:none}
 dialog.full .stage{overflow:hidden;touch-action:none}
 .stage:fullscreen .beam,.stage:fullscreen .flick,.stage:fullscreen .bulb,dialog.full .beam,dialog.full .flick,dialog.full .bulb{display:none}
-.zoomed{cursor:grab}
+.stage img{-webkit-user-drag:none;user-select:none}
+.zoomed .lens,.zoomed .poster{cursor:grab}.zoomed.drag .lens,.zoomed.drag .poster{cursor:grabbing}
 .stage:fullscreen::after{content:attr(data-tip);position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:13px;color:#a8957a;pointer-events:none;animation:fade 3s 2.5s forwards}
 .stage:-webkit-full-screen::after{content:attr(data-tip);position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:13px;color:#a8957a;pointer-events:none;animation:fade 3s 2.5s forwards}
 dialog.full .stage::after{content:attr(data-tip);position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));text-align:center;font-size:13px;color:#a8957a;pointer-events:none;animation:fade 3s 2.5s forwards}
@@ -105,7 +103,7 @@ dialog.full .stage::after{content:attr(data-tip);position:absolute;left:0;right:
 .flick{background:#0a0608;opacity:0;animation:fl 1.5s both,fi 9s 1.5s infinite}
 .bulb{z-index:2;left:50%;top:-9px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#fff3d2;box-shadow:0 0 12px 5px rgba(243,223,181,.75),0 0 60px 22px rgba(243,223,181,.28);animation:bl 1.5s both,bi 9s 1.5s infinite}
 .bulb::before{content:"";position:absolute;left:4.5px;bottom:10px;width:1px;height:4vh;background:rgba(243,223,181,.35)}
-.loupe{z-index:3}
+
 @keyframes fl{0%{opacity:.95}14%{opacity:.25}22%{opacity:.9}34%{opacity:.1}44%{opacity:.6}58%,100%{opacity:0}}
 @keyframes bl{0%{opacity:.1}14%{opacity:1}22%{opacity:.15}34%{opacity:1}44%{opacity:.45}58%,100%{opacity:1}}
 @keyframes fi{0%,86%,100%{opacity:0}88%{opacity:.4}90%{opacity:0}93%{opacity:.55}95%{opacity:0}}
@@ -193,7 +191,7 @@ body.studio-on .head{opacity:1;transform:none}
   .bar{gap:12px;width:100%;margin-top:auto;padding-top:8px}
   .bar button{padding:10px 0}
 }
-@media(hover:none){.lens{touch-action:pan-y}.lens:has(img){cursor:auto}}
+@media(hover:none){.lens{touch-action:pan-y}}
 </style>
 </head>
 <body>
@@ -409,14 +407,7 @@ function show(i,from){
   const m=st.querySelector('img,video,.ph,iframe');
   if(!calm&&opening&&from&&m){const f=from.getBoundingClientRect(),l=m.getBoundingClientRect();m.style.transformOrigin='0 0';
     m.animate([{transform:`translate(${f.left-l.left}px,${f.top-l.top}px) scale(${f.width/l.width},${f.height/l.height})`},{transform:'none'}],{duration:650,easing:'cubic-bezier(.2,.8,.2,1)'})}
-  lens();
 }
-function lens(){const wrap=st.querySelector('.lens'),img=wrap&&wrap.querySelector('img');if(!img||touch)return;
-  const Z=2.6,L=90,lp=document.createElement('i');lp.className='loupe';wrap.append(lp);
-  const go=e=>{const r=img.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
-    if(px<0||py<0||px>r.width||py>r.height){lp.style.opacity=0;return}
-    lp.style.cssText=`opacity:1;left:${px-L}px;top:${py-L}px;background-image:url("${img.src}");background-size:${r.width*Z}px ${r.height*Z}px;background-position:${L-px*Z}px ${L-py*Z}px`};
-  wrap.onpointermove=go;wrap.onpointerdown=go;wrap.onpointerleave=()=>lp.style.opacity=0}
 
 /* full screen: the real thing where the browser allows it, otherwise the piece fills the window */
 const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;
@@ -448,7 +439,7 @@ const isFull=()=>!!fsEl()||d.classList.contains('full');
 const Z={s:1,x:0,y:0},pts=new Map();let g0=null,moved=false,tapT=0,exitT=null;
 const zt=()=>st.querySelector('.lens img,.lens video,.poster');
 function applyZ(){const el=zt();if(!el)return;el.style.transformOrigin='0 0';el.style.transform=Z.s>1.001?`translate(${Z.x}px,${Z.y}px) scale(${Z.s})`:'';st.classList.toggle('zoomed',Z.s>1.001)}
-function resetZ(){Z.s=1;Z.x=0;Z.y=0;applyZ()}
+function resetZ(){G.on=false;Z.s=1;Z.x=0;Z.y=0;applyZ()}
 function baseOf(){const r=zt().getBoundingClientRect();return {l:r.left-Z.x,t:r.top-Z.y,w:r.width/Z.s,h:r.height/Z.s}}
 function clampZ(b){ /* keep the piece covering the screen; never let it drift off */
   const fit=(pos,size,start,view)=>size<=view?(view-size)/2-start:Math.min(-start,Math.max(view-start-size,pos));
@@ -456,6 +447,13 @@ function clampZ(b){ /* keep the piece covering the screen; never let it drift of
 function zoomTo(s,ax,ay){ /* zoom around a point on screen, which stays under your fingers */
   const b=baseOf(),px=(ax-b.l-Z.x)/Z.s,py=(ay-b.t-Z.y)/Z.s;
   Z.s=Math.max(1,Math.min(5,s));Z.x=ax-b.l-Z.s*px;Z.y=ay-b.t-Z.s*py;clampZ(b);applyZ()}
+/* mouse wheel and double-click glide to their new zoom instead of jumping there */
+const G={s:1,x:0,y:0,on:false};
+function glide(s,ax,ay){G.s=Math.max(1,Math.min(5,s));G.x=ax;G.y=ay;if(G.on)return;G.on=true;
+  (function step(){if(!G.on||!zt()){G.on=false;return}
+    let ns=Z.s+(G.s-Z.s)*.2;if(Math.abs(G.s-ns)<.003)ns=G.s;
+    zoomTo(ns,G.x,G.y);if(ns===G.s){G.on=false;if(ns===1)resetZ();return}
+    requestAnimationFrame(step)})()}
 function startG(){
   const p=[...pts.values()];if(!p.length||!zt()){g0=null;return}
   const m=p.length>1?{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2,d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)}:{x:p[0].x,y:p[0].y,d:0};
@@ -463,6 +461,10 @@ function startG(){
 function exitFull(){if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);d.classList.remove('full');label();resetZ()}
 st.addEventListener('pointerdown',e=>{
   if(!isFull()||e.target.closest('.vt')||!zt())return;
+  G.on=false;
+  /* with a mouse: stop the browser dragging the picture away as a file, and keep the drag going outside the window */
+  if(e.pointerType==='mouse'){e.preventDefault();try{st.setPointerCapture(e.pointerId)}catch(_){}}
+  st.classList.add('drag');
   pts.set(e.pointerId,{x:e.clientX,y:e.clientY,x1:e.clientX,y1:e.clientY});if(pts.size>1)moved=true;else moved=false;startG()});
 st.addEventListener('pointermove',e=>{
   const p=pts.get(e.pointerId);if(!p||!g0)return;p.x=e.clientX;p.y=e.clientY;
@@ -475,13 +477,17 @@ st.addEventListener('pointermove',e=>{
 function endP(e){
   if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
   if(pts.size){startG();return}
+  st.classList.remove('drag');
   if(Z.s<1.03)resetZ();
   if(moved||e.type==='pointercancel')return;
   const now=performance.now();
-  if(now-tapT<320){clearTimeout(exitT);tapT=0;Z.s>1.05?resetZ():zoomTo(2.5,e.clientX,e.clientY)} /* double-tap */
+  if(now-tapT<320){clearTimeout(exitT);tapT=0;glide(Z.s>1.05?1:2.5,e.clientX,e.clientY)} /* double-tap */
   else{tapT=now;if(Z.s<=1.05)exitT=setTimeout(exitFull,320)}} /* single tap, once it's clear it isn't a double */
 st.addEventListener('pointerup',endP);st.addEventListener('pointercancel',endP);
-st.addEventListener('wheel',e=>{if(!isFull()||!zt())return;e.preventDefault();zoomTo(Z.s*Math.exp(-e.deltaY*.0015),e.clientX,e.clientY)},{passive:false});
+st.addEventListener('wheel',e=>{if(!isFull()||!zt())return;e.preventDefault();
+  /* a wheel notch is ~100; a trackpad pinch arrives as small ctrl+wheel steps, so it gets a stronger factor */
+  const dy=e.deltaY*(e.deltaMode===1?33:1),k=e.ctrlKey?.012:.0025;
+  glide((G.on?G.s:Z.s)*Math.exp(-dy*k),e.clientX,e.clientY)},{passive:false});
 document.getElementById('prev').onclick=()=>show(cur-1);
 document.getElementById('next').onclick=()=>show(cur+1);
 document.getElementById('close').onclick=()=>d.close();
