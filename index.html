@@ -68,7 +68,7 @@ dialog::backdrop{background:rgba(10,6,8,.95)}
 .lens{position:relative;line-height:0;touch-action:none}
 .stage img,.stage video{display:block}
 .stage img,.stage video,.stage .ph{height:auto;width:min(92vw,calc(70vh*var(--ar)))}
-.stage iframe{border:0;display:block;width:min(92vw,calc(70vh*1.78));aspect-ratio:16/9}
+.stage iframe{border:0;display:block;width:min(92vw,calc(70vh*1.78));aspect-ratio:16/9;background:#0a0608}
 .cap{text-align:center}
 .cap h2{font:italic 400 2rem/1.1 'Instrument Serif',Georgia,serif;margin:16px 0 4px}
 .bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:28px;width:min(520px,92vw);margin-top:18px}
@@ -185,6 +185,7 @@ body.studio-on .head{opacity:1;transform:none}
      The script then grows each piece to fill whatever height its caption leaves. */
   .stage img,.stage video,.stage .ph,.poster{width:min(calc(100vw - 32px),calc(56svh*var(--ar)))}
   .stage{padding-top:4.5svh} /* room for the hanging bulb above the piece */
+  .stage iframe{width:calc(100vw - 32px)}
   .bulb::before{height:3.5svh}
   .cap{padding-top:12px}
   .cap h2{font-size:1.5rem;margin:0 0 2px}
@@ -218,7 +219,8 @@ body.studio-on .head{opacity:1;transform:none}
 
 <script>
 /* EDIT HERE. Ruskin asks for title, medium, size and date only, so keep captions to those. */
-const VIMEO_SRC = ""; /* paste your Vimeo player link, e.g. https://player.vimeo.com/video/123456789?h=abcdef */
+/* the walkthrough plays inside the site, in YouTube's player (the privacy-friendly version, no cookies until play) */
+const VIDEO_SRC = "https://www.youtube-nocookie.com/embed/A2f-F4M5cWc?rel=0&playsinline=1";
 /* img: path or URL of your photo. r: shape of the image, width/height (3/4 portrait, 1/1 square, 4/3 landscape)
    video: a short looping clip (img is then its first frame) */
 const INSTALL = [ /* room: pieces with the same number share one screen */
@@ -228,7 +230,7 @@ const INSTALL = [ /* room: pieces with the same number share one screen */
   {t:"Sabotaged Stop Motion",m:"Cardboard, modelling clay, acrylic paint, wire, wire mesh, plastic mesh, handmade paper, wood, laces, miniature newspapers, mirror, small objects",s:"5 feet tall",d:"2026",img:"images/sabotaged-stop-motion.jpg",r:"3/4",room:1},
   {t:"Sabotaged Paintings",m:"Canvas, acrylic paint, wood",s:"5 feet tall",d:"2026",img:"images/sabotaged-paintings.jpg",r:"3/4",room:2},
   {t:"Childhood Drawing",m:"Oil pastels, paper, wood, wire, papier-mâché, modelling paste, nails, washers",s:"7 feet tall",d:"2026",img:"images/childhood-drawing.jpg",r:"3/4",room:2},
-  {t:"I’m Still Someone Who Could Have",m:"Video of the installation, with audio and synchronized lighting",s:"9 minutes",d:"2026",img:"images/film-thumbnail.jpg",r:"2576/1714",film:true,room:3}
+  {t:"Installation Walkthrough",m:"Video tour of the installation, with sound and synchronized lighting",s:"10 minutes 45 seconds",d:"2026",img:"images/film-thumbnail.jpg",r:"2576/1714",film:true,room:3}
 ];
 const PRACTICE = [
   {t:"The Heaviest Chains Are the Ones That We Forge in Our Own Minds",m:"Digital collage of scanned hand lettering on paper",s:"A3",d:"2024",img:"images/lettering.jpg",r:"1822/2576",room:4},
@@ -396,7 +398,7 @@ function show(i,from){
   st.innerHTML=w.video
     ?`<div class="lens">${vid(w)}<button type="button" class="vt"></button></div>`
     :w.film
-    ?(VIMEO_SRC?`<iframe src="${VIMEO_SRC}${VIMEO_SRC.includes('?')?'&':'?'}autoplay=1" title="${w.t}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`:`<div class="poster" style="--ar:${ar(w)}"><img src="${w.img}" alt="${w.t}">${PLAY}</div>`)
+    ?(VIDEO_SRC?`<iframe src="${VIDEO_SRC}${VIDEO_SRC.includes('?')?'&':'?'}autoplay=1" title="${w.t}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`:`<div class="poster" style="--ar:${ar(w)}"><img src="${w.img}" alt="${w.t}">${PLAY}</div>`)
     :`<div class="lens">${w.img?`<img src="${w.img}" alt="${w.t}" style="${v}">`:`<div class="ph" style="${v}">Image goes here</div>`}${cur<INSTALL.length?'<i class="beam"></i><i class="flick"></i><i class="bulb"></i>':''}</div>`;
   if(w.video)loopVideo(st.querySelector('video'),st.querySelector('.vt'));
   d.querySelector('.cap').innerHTML=`<h2>${w.t}</h2><p>${lines(w)}</p>`;
